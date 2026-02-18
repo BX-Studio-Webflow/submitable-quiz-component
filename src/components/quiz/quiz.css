@@ -337,14 +337,4 @@
   .quiz-results-panel {
     padding: 20px 20px;
   }
-
-  .quiz-segmented {
-    flex-direction: column;
-  }
-
-  .quiz-segmented-option:first-child:not(.quiz-segmented-option--selected),
-  .quiz-segmented-option:last-child:not(.quiz-segmented-option--selected),
-  .quiz-segmented-option--selected {
-    border-radius: 9999px;
-  }
 }
