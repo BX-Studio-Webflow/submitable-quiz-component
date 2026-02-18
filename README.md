@@ -1,4 +1,65 @@
-# React + TypeScript + Vite
+# Submittable ROI Quiz Component
+
+A React ROI calculator component with industry-specific formulas, HubSpot form integration, and Webflow support.
+
+## ROI Result Calculations
+
+Results depend on the selected industry. All formulas use `floor` for hours (e.g. 68.8 → 68) and `ROUND_TO_NEAREST_5` where specified (round to nearest 5, e.g. 123 → 125).
+
+### Inputs (all sectors)
+
+| Input | Range | Step |
+|-------|-------|------|
+| Administrators | 0–25 | 1 |
+| Reviewers | 0–100 | 1 |
+| Average salary | $10,000–$250,000 | $1,000 |
+| Launch time | &lt;1 mo, 1 mo … 6+ mo | 1 month |
+| Total employees (Private only) | Numeric text | — |
+
+### Nonprofit sector
+
+| Result | Formula |
+|--------|---------|
+| Admin hours/week | `floor(administrators × 3.46)` |
+| Save $/year | `round(averageSalary × 0.2645)` |
+| Reviewer hours/week | `floor(reviewers × 2.4)` |
+| Launch weeks faster | See table below |
+
+### Public sector
+
+| Result | Formula |
+|--------|---------|
+| Admin hours/week | `floor(administrators × 3.56)` |
+| Save $/year | `round_to_nearest_5(averageSalary × 1.98163)` |
+| Reviewer hours/week | `floor(reviewers × 3.71)` |
+| Launch weeks faster | See table below |
+
+### Private sector
+
+| Result | Formula |
+|--------|---------|
+| Admin hours/week | `floor(administrators × 3.2)` |
+| Reclaim $/program | `round_to_nearest_5(admins × avgSalary × 0.1717286858)` |
+| Reviewer hours/week | `floor(reviewers × 3.71)` |
+| Launch weeks faster | See table below |
+| Save $/year (retention) | `round((totalEmployees × avgSalary) × 0.001)` |
+
+### Launch time → weeks faster
+
+Slider: 1 = &lt;1 month, 2 = 1 month, 3 = 2 months, 4 = 3 months, 5 = 4 months, 6 = 5 months or more.
+
+| Launch | Nonprofit | Public | Private |
+|--------|-----------|--------|---------|
+| &lt;1 month | 0 | 0 | 0 |
+| 1 month | 1 | 0.4 | 1 |
+| 2 months | 4 | 4 | 5 |
+| 3 months | 8 | 8 | 9 |
+| 4 months | 12 | 12 | 13 |
+| 5 months or more | 20 | 20 | 21 |
+
+---
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

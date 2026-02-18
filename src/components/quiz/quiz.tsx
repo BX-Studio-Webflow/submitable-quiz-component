@@ -39,10 +39,11 @@ function roundToNearest5(x: number): number {
   return Math.round(x / 5) * 5
 }
 
+/* Slider: 1=<1mo, 2=1mo, 3=2mo, 4=3mo, 5=4mo, 6=5mo or 6+ */
 const LAUNCH_WEEKS: Record<string, Record<number, number>> = {
-  nonprofit: { 1: 0, 2: 1, 3: 4, 4: 8, 5: 16, 6: 20 },
-  public: { 1: 0, 2: 0.4, 3: 4, 4: 8, 5: 16, 6: 20 },
-  private: { 1: 0, 2: 1, 3: 5, 4: 9, 5: 17, 6: 21 },
+  nonprofit: { 1: 0, 2: 1, 3: 4, 4: 8, 5: 12, 6: 20 },
+  public: { 1: 0, 2: 0.4, 3: 4, 4: 8, 5: 12, 6: 20 },
+  private: { 1: 0, 2: 1, 3: 5, 4: 9, 5: 13, 6: 21 },
 }
 
 function computeResults(answers: QuizAnswers) {
