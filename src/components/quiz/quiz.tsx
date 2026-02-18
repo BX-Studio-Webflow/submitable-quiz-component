@@ -22,7 +22,7 @@ const INDUSTRIES = [
 ]
 
 const defaultAnswers: QuizAnswers = {
-  industry: null,
+  industry: 'nonprofit',
   administrators: 0,
   reviewers: 0,
   averageSalary: 10000,
