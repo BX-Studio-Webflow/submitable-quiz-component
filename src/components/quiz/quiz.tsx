@@ -342,7 +342,9 @@ export default function Quiz({
               ? 'Less than 1 month'
               : answers.launchTimeMonths >= 6
                 ? '6 months or more'
-                : `${answers.launchTimeMonths} months`}
+                : answers.launchTimeMonths === 2
+                  ? '1 month'
+                  : `${answers.launchTimeMonths - 1} months`}
           </label>
           <div
             className="quiz-slider-wrap"
