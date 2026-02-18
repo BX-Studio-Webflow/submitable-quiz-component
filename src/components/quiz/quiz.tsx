@@ -39,6 +39,12 @@ function roundToNearest5(x: number): number {
   return Math.round(x / 5) * 5
 }
 
+function formatLaunchWeeks(weeks: number): string {
+  if (weeks === 0) return '0 weeks'
+  if (weeks < 1) return 'a few days'
+  return `${weeks} weeks`
+}
+
 /* Slider: 1=<1mo, 2=1mo, 3=2mo, 4=3mo, 5=4mo, 6=5mo, 7=6mo+ */
 const LAUNCH_WEEKS: Record<string, Record<number, number>> = {
   nonprofit: { 1: 0, 2: 1, 3: 4, 4: 8, 5: 12, 6: 16, 7: 20 },
@@ -237,29 +243,25 @@ export default function Quiz({
           ))}
         </div>
 
-        {answers.industry === 'private' && (
-          <>
-            <h3 className="quiz-step-title">Total Employees</h3>
-            <div className="quiz-field">
-              <label htmlFor="quiz-total-employees">Number of employees (numeric only)</label>
-              <input
-                id="quiz-total-employees"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={answers.totalEmployees}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, '')
-                  updateAnswer('totalEmployees', v)
-                }}
-                className="quiz-input"
-                placeholder=""
-              />
-            </div>
-          </>
-        )}
-
         <h3 className="quiz-step-title">2. How many team members do you work with?</h3>
+        {answers.industry === 'private' && (
+          <div className="quiz-field">
+            <label htmlFor="quiz-total-employees">Total Employees</label>
+            <input
+              id="quiz-total-employees"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={answers.totalEmployees}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, '')
+                updateAnswer('totalEmployees', v)
+              }}
+              className="quiz-input"
+              placeholder=""
+            />
+          </div>
+        )}
         <div className="quiz-field">
           <label htmlFor="quiz-administrators">
             {answers.administrators} Administrators — number of team members that manage program(s).
@@ -457,27 +459,48 @@ export default function Quiz({
           <p className="quiz-results-intro">
             By combining your responses with our current customer averages in your industry, we estimate that with Submittable you could:
           </p>
-          <div className="quiz-results-grid">
-            <div className="quiz-results-item">
-              Save administrators <strong>{results.adminHoursPerWeek} hours</strong> per week
-            </div>
-            <div className="quiz-results-item">
-              Save reviewers <strong>{results.reviewerHoursPerWeek} hours</strong> per week
-            </div>
-            <div className="quiz-results-item">
-              {results.savedPerYearLabel} <strong>${results.savedPerYear.toLocaleString()}</strong>{' '}
-              {answers.industry === 'private' ? 'per program in admin cost' : 'per year'}
-            </div>
-            <div className="quiz-results-item">
-              Launch your program <strong>{results.launchWeeksFaster} weeks</strong> faster
-            </div>
-            {results.retentionPerYear != null && results.retentionPerYear > 0 && (
-              <div className="quiz-results-item quiz-results-item--full">
-                Save <strong>${results.retentionPerYear.toLocaleString()}</strong> per year in
-                improved retention
+          {answers.industry === 'private' ? (
+            <div className="quiz-results-private-grid">
+              <div className="quiz-results-column">
+                <h4 className="quiz-results-col-header">Your Community Investment Programs Could</h4>
+                <div className="quiz-results-item">
+                  Save administrators <strong>{results.adminHoursPerWeek} hours</strong> per week
+                </div>
+                <div className="quiz-results-item">
+                  Save reviewers <strong>{results.reviewerHoursPerWeek} hours</strong> per week
+                </div>
+                <div className="quiz-results-item">
+                  Launch your program <strong>{formatLaunchWeeks(results.launchWeeksFaster)}</strong> faster
+                </div>
+                <div className="quiz-results-item">
+                  Reclaim <strong>${results.savedPerYear.toLocaleString()}</strong> per program in admin cost
+                </div>
               </div>
-            )}
-          </div>
+              <div className="quiz-results-column">
+                <h4 className="quiz-results-col-header">Your Employee Engagement Programs Could</h4>
+                {results.retentionPerYear != null && results.retentionPerYear > 0 && (
+                  <div className="quiz-results-item">
+                    Save <strong>${results.retentionPerYear.toLocaleString()}</strong> per year in improved retention
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="quiz-results-grid">
+              <div className="quiz-results-item">
+                Save administrators <strong>{results.adminHoursPerWeek} hours</strong> per week
+              </div>
+              <div className="quiz-results-item">
+                {results.savedPerYearLabel} <strong>${results.savedPerYear.toLocaleString()}</strong> per year
+              </div>
+              <div className="quiz-results-item">
+                Save reviewers <strong>{results.reviewerHoursPerWeek} hours</strong> per week
+              </div>
+              <div className="quiz-results-item">
+                Launch your program <strong>{formatLaunchWeeks(results.launchWeeksFaster)}</strong> faster
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>
