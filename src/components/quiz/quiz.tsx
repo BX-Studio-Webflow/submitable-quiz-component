@@ -462,11 +462,11 @@ export default function Quiz({
               Save administrators <strong>{results.adminHoursPerWeek} hours</strong> per week
             </div>
             <div className="quiz-results-item">
-              {results.savedPerYearLabel} <strong>${results.savedPerYear.toLocaleString()}</strong>{' '}
-              {answers.industry === 'private' ? 'per program in admin cost' : 'per year'}
+              Save reviewers <strong>{results.reviewerHoursPerWeek} hours</strong> per week
             </div>
             <div className="quiz-results-item">
-              Save reviewers <strong>{results.reviewerHoursPerWeek} hours</strong> per week
+              {results.savedPerYearLabel} <strong>${results.savedPerYear.toLocaleString()}</strong>{' '}
+              {answers.industry === 'private' ? 'per program in admin cost' : 'per year'}
             </div>
             <div className="quiz-results-item">
               Launch your program <strong>{results.launchWeeksFaster} weeks</strong> faster
