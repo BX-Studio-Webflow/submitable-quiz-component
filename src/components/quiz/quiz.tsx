@@ -69,7 +69,7 @@ function computeResults(answers: QuizAnswers) {
 
   if (industry === 'public') {
     const adminHours = Math.floor(answers.administrators * 3.56)
-    const savedPerYear = roundToNearest5(answers.averageSalary * 1.98163)
+    const savedPerYear = Math.round(answers.administrators * answers.averageSalary * 0.247705 / 5) * 5
     const reviewerHours = Math.floor(answers.reviewers * 3.71)
     return {
       adminHoursPerWeek: adminHours,
