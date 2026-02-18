@@ -1,11 +1,11 @@
 {
   "library": {
-    "name": "Brian's Webflow Library",
+    "name": "Submittable's Webflow Library",
     "components": [
       "./src/**/*.webflow.@(js|jsx|mjs|ts|tsx)"
     ],
     "description": "A collection of awesome react components for use in webflow",
-    "id": "brians-webflow-library"
+    "id": "submittable-webflow-library"
   },
   "telemetry": {
     "global": {

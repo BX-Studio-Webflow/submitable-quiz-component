@@ -7,6 +7,7 @@ export type QuizAnswers = {
   reviewers: number
   averageSalary: number
   launchTimeMonths: number
+  totalEmployees: string
   firstName: string
   lastName: string
   workEmail: string
@@ -26,6 +27,7 @@ const defaultAnswers: QuizAnswers = {
   reviewers: 0,
   averageSalary: 10000,
   launchTimeMonths: 1,
+  totalEmployees: '',
   firstName: '',
   lastName: '',
   workEmail: '',
@@ -33,18 +35,76 @@ const defaultAnswers: QuizAnswers = {
   phone: '',
 }
 
+function roundToNearest5(x: number): number {
+  return Math.round(x / 5) * 5
+}
+
+const LAUNCH_WEEKS: Record<string, Record<number, number>> = {
+  nonprofit: { 1: 0, 2: 1, 3: 4, 4: 8, 5: 16, 6: 20 },
+  public: { 1: 0, 2: 0.4, 3: 4, 4: 8, 5: 16, 6: 20 },
+  private: { 1: 0, 2: 1, 3: 5, 4: 9, 5: 17, 6: 21 },
+}
+
 function computeResults(answers: QuizAnswers) {
-  const baseMultiplier = answers.industry === 'nonprofit' ? 1.2 : answers.industry === 'public' ? 1.1 : 1
-  const adminHours = Math.round(answers.administrators * 3 * baseMultiplier)
-  const reviewerHours = Math.round(answers.reviewers * 1.5 * baseMultiplier)
-  const hourlyRate = answers.averageSalary / 52 / 40
-  const savedDollars = Math.round((adminHours + reviewerHours) * 52 * hourlyRate)
-  const weeksFaster = Math.round(answers.launchTimeMonths * 2.5 * baseMultiplier)
+  const industry = answers.industry ?? 'nonprofit'
+  const launchKey = Math.min(Math.max(answers.launchTimeMonths, 1), 6) as 1 | 2 | 3 | 4 | 5 | 6
+  const weeksMap = LAUNCH_WEEKS[industry] ?? LAUNCH_WEEKS.nonprofit
+  const launchWeeksFaster = weeksMap[launchKey] ?? 0
+  const displayWeeks = launchWeeksFaster
+
+  if (industry === 'nonprofit') {
+    const adminHours = Math.floor(answers.administrators * 3.46)
+    const savedPerYear = Math.round(answers.averageSalary * 0.2645)
+    const reviewerHours = Math.floor(answers.reviewers * 2.4)
+    return {
+      adminHoursPerWeek: adminHours,
+      reviewerHoursPerWeek: reviewerHours,
+      savedPerYear,
+      savedPerYearLabel: 'Save',
+      launchWeeksFaster: displayWeeks,
+      retentionPerYear: null as number | null,
+    }
+  }
+
+  if (industry === 'public') {
+    const adminHours = Math.floor(answers.administrators * 3.56)
+    const savedPerYear = roundToNearest5(answers.averageSalary * 1.98163)
+    const reviewerHours = Math.floor(answers.reviewers * 3.71)
+    return {
+      adminHoursPerWeek: adminHours,
+      reviewerHoursPerWeek: reviewerHours,
+      savedPerYear,
+      savedPerYearLabel: 'Save',
+      launchWeeksFaster: displayWeeks,
+      retentionPerYear: null as number | null,
+    }
+  }
+
+  if (industry === 'private') {
+    const adminHours = Math.floor(answers.administrators * 3.2)
+    const savedPerProgram = roundToNearest5(
+      answers.administrators * answers.averageSalary * 0.1717286858
+    )
+    const reviewerHours = Math.floor(answers.reviewers * 3.71)
+    const employees = parseInt(answers.totalEmployees, 10) || 0
+    const retentionPerYear = Math.round((employees * answers.averageSalary) * 0.001)
+    return {
+      adminHoursPerWeek: adminHours,
+      reviewerHoursPerWeek: reviewerHours,
+      savedPerYear: savedPerProgram,
+      savedPerYearLabel: 'Reclaim',
+      launchWeeksFaster: displayWeeks,
+      retentionPerYear,
+    }
+  }
+
   return {
-    adminHoursPerWeek: adminHours,
-    reviewerHoursPerWeek: reviewerHours,
-    savedPerYear: savedDollars,
-    launchWeeksFaster: weeksFaster,
+    adminHoursPerWeek: 0,
+    reviewerHoursPerWeek: 0,
+    savedPerYear: 0,
+    savedPerYearLabel: 'Save' as const,
+    launchWeeksFaster: 0,
+    retentionPerYear: null as number | null,
   }
 }
 
@@ -52,9 +112,66 @@ export type QuizProps = {
   title?: string
   subtitle?: string
   className?: string
+  hubspotPortalId?: string
+  hubspotFormId?: string
 }
 
-export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
+async function submitToHubSpot(
+  answers: QuizAnswers,
+  results: ReturnType<typeof computeResults>,
+  portalId: string,
+  formId: string
+) {
+  const hutk =
+    typeof document !== 'undefined'
+      ? document.cookie.match(/hubspotutk=([^;]*)/)?.[1]
+      : undefined
+
+  const fields = [
+    { name: 'firstname', value: answers.firstName },
+    { name: 'lastname', value: answers.lastName },
+    { name: 'email', value: answers.workEmail },
+    { name: 'company', value: answers.companyName },
+    { name: 'phone', value: answers.phone },
+    { name: 'industry', value: answers.industry ?? '' },
+    { name: 'administrators', value: String(answers.administrators) },
+    { name: 'reviewers', value: String(answers.reviewers) },
+    { name: 'average_salary', value: String(answers.averageSalary) },
+    { name: 'launch_time_months', value: String(answers.launchTimeMonths) },
+    { name: 'total_employees', value: answers.totalEmployees },
+    { name: 'roi_admin_hours', value: String(results.adminHoursPerWeek) },
+    { name: 'roi_saved_per_year', value: String(results.savedPerYear) },
+    { name: 'roi_reviewer_hours', value: String(results.reviewerHoursPerWeek) },
+    { name: 'roi_weeks_faster', value: String(results.launchWeeksFaster) },
+  ]
+
+  const body: Record<string, unknown> = {
+    fields,
+    context: {
+      pageUri: typeof window !== 'undefined' ? window.location.href : '',
+      pageName: typeof document !== 'undefined' ? document.title : '',
+    },
+  }
+  if (hutk) (body.context as Record<string, string>).hutk = hutk
+
+  const res = await fetch(
+    `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formId}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }
+  )
+  if (!res.ok) throw new Error(`HubSpot submit failed: ${res.status}`)
+}
+
+export default function Quiz({
+  title,
+  subtitle,
+  className = '',
+  hubspotPortalId = '23126439',
+  hubspotFormId = '19e6ef95-1082-407b-bf88-3abcaed174b3',
+}: QuizProps) {
   const [answers, setAnswers] = useState<QuizAnswers>(defaultAnswers)
   const [showResults, setShowResults] = useState(false)
 
@@ -62,8 +179,19 @@ export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
     setAnswers((prev) => ({ ...prev, [key]: value }))
   }
 
+  const contactFilled =
+    answers.firstName.trim() !== '' &&
+    answers.lastName.trim() !== '' &&
+    answers.workEmail.trim() !== '' &&
+    answers.companyName.trim() !== ''
+  const privateEmployeesFilled =
+    answers.industry !== 'private' ||
+    (answers.totalEmployees.trim() !== '' && !Number.isNaN(parseInt(answers.totalEmployees, 10)))
   const canSeeResults =
-    answers.industry !== null && (answers.administrators > 0 || answers.reviewers > 0)
+    answers.industry !== null &&
+    (answers.administrators > 0 || answers.reviewers > 0) &&
+    contactFilled &&
+    privateEmployeesFilled
   const results = computeResults(answers)
 
   return (
@@ -74,9 +202,20 @@ export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
         data-title={title}
         data-subtitle={subtitle}
         className="quiz-form"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault()
-          if (canSeeResults) setShowResults(true)
+          if (!canSeeResults) return
+          try {
+            await submitToHubSpot(
+              answers,
+              results,
+              hubspotPortalId,
+              hubspotFormId
+            )
+            setShowResults(true)
+          } catch (err) {
+            console.error('HubSpot submission failed:', err)
+          }
         }}
       >
         <h3 className="quiz-step-title">1. Choose your industry</h3>
@@ -93,12 +232,37 @@ export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
           ))}
         </div>
 
+        {answers.industry === 'private' && (
+          <>
+            <h3 className="quiz-step-title">Total Employees</h3>
+            <div className="quiz-field">
+              <label htmlFor="quiz-total-employees">Number of employees (numeric only)</label>
+              <input
+                id="quiz-total-employees"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={answers.totalEmployees}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '')
+                  updateAnswer('totalEmployees', v)
+                }}
+                className="quiz-input"
+                placeholder=""
+              />
+            </div>
+          </>
+        )}
+
         <h3 className="quiz-step-title">2. How many team members do you work with?</h3>
         <div className="quiz-field">
           <label htmlFor="quiz-administrators">
             {answers.administrators} Administrators — number of team members that manage program(s).
           </label>
-          <div className="quiz-slider-wrap">
+          <div
+            className="quiz-slider-wrap"
+            style={{ '--slider-fill': `${(answers.administrators / 25) * 100}%` } as React.CSSProperties}
+          >
             <input
               id="quiz-administrators"
               type="range"
@@ -118,7 +282,10 @@ export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
           <label htmlFor="quiz-reviewers">
             {answers.reviewers} Reviewers — number of internal or external individuals that review applications.
           </label>
-          <div className="quiz-slider-wrap">
+          <div
+            className="quiz-slider-wrap"
+            style={{ '--slider-fill': `${(answers.reviewers / 100) * 100}%` } as React.CSSProperties}
+          >
             <input
               id="quiz-reviewers"
               type="range"
@@ -140,13 +307,18 @@ export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
           <label htmlFor="quiz-salary">
             ${answers.averageSalary.toLocaleString()}
           </label>
-          <div className="quiz-slider-wrap">
+          <div
+            className="quiz-slider-wrap"
+            style={{
+              '--slider-fill': `${((answers.averageSalary - 10000) / 240000) * 100}%`,
+            } as React.CSSProperties}
+          >
             <input
               id="quiz-salary"
               type="range"
               min={10000}
               max={250000}
-              step={5000}
+              step={1000}
               value={answers.averageSalary}
               onChange={(e) => updateAnswer('averageSalary', Number(e.target.value))}
               className="quiz-range"
@@ -167,7 +339,12 @@ export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
                 ? '6 months or more'
                 : `${answers.launchTimeMonths} months`}
           </label>
-          <div className="quiz-slider-wrap">
+          <div
+            className="quiz-slider-wrap"
+            style={{
+              '--slider-fill': `${((answers.launchTimeMonths - 1) / 5) * 100}%`,
+            } as React.CSSProperties}
+          >
             <input
               id="quiz-launch"
               type="range"
@@ -271,7 +448,8 @@ export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
               Save administrators <strong>{results.adminHoursPerWeek} hours</strong> per week
             </div>
             <div className="quiz-results-item">
-              Save <strong>${results.savedPerYear.toLocaleString()}</strong> per year
+              {results.savedPerYearLabel} <strong>${results.savedPerYear.toLocaleString()}</strong>{' '}
+              {answers.industry === 'private' ? 'per program in admin cost' : 'per year'}
             </div>
             <div className="quiz-results-item">
               Save reviewers <strong>{results.reviewerHoursPerWeek} hours</strong> per week
@@ -279,6 +457,12 @@ export default function Quiz({ title, subtitle, className = '' }: QuizProps) {
             <div className="quiz-results-item">
               Launch your program <strong>{results.launchWeeksFaster} weeks</strong> faster
             </div>
+            {results.retentionPerYear != null && results.retentionPerYear > 0 && (
+              <div className="quiz-results-item quiz-results-item--full">
+                Save <strong>${results.retentionPerYear.toLocaleString()}</strong> per year in
+                improved retention
+              </div>
+            )}
           </div>
         </div>
       </section>
