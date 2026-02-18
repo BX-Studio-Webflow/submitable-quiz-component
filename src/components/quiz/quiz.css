@@ -1,10 +1,13 @@
 /* Submittable ROI Calculator — form-only view, blue accent, segmented control */
+/* Headings: Pp Neue Montreal (or DM Sans from Google Fonts fallback) */
+/* Body: Bureau Sans Book (or Inter from Google Fonts fallback) */
 
 .quiz {
   width: 100%;
   margin: 0 auto;
   color: #1a1a1a;
   text-align: left;
+  font-family: "Bureau Sans Book", "Inter", Arial, sans-serif;
 }
 
 .quiz-header {
@@ -13,6 +16,7 @@
 }
 
 .quiz-title {
+  font-family: "Pp Neue Montreal", "DM Sans", Arial, sans-serif;
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0 0 0.75rem;
@@ -37,8 +41,9 @@
 }
 
 .quiz-step-title {
+  font-family: "Pp Neue Montreal", "DM Sans", Arial, sans-serif;
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 500;
   margin: 0;
   color: #1a1a1a;
   line-height: 1.4;
@@ -159,6 +164,7 @@
 
 /* Contact form section */
 .quiz-form-section-title {
+  font-family: "Pp Neue Montreal", "DM Sans", Arial, sans-serif;
   font-size: 1.125rem;
   font-weight: 600;
   margin: 0 0 1rem;
@@ -280,6 +286,7 @@
 }
 
 .quiz-results-title {
+  font-family: "Pp Neue Montreal", "DM Sans", Arial, sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 0.75rem;
