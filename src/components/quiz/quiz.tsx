@@ -39,16 +39,16 @@ function roundToNearest5(x: number): number {
   return Math.round(x / 5) * 5
 }
 
-/* Slider: 1=<1mo, 2=1mo, 3=2mo, 4=3mo, 5=4mo, 6=5mo or 6+ */
+/* Slider: 1=<1mo, 2=1mo, 3=2mo, 4=3mo, 5=4mo, 6=5mo, 7=6mo+ */
 const LAUNCH_WEEKS: Record<string, Record<number, number>> = {
-  nonprofit: { 1: 0, 2: 1, 3: 4, 4: 8, 5: 12, 6: 20 },
-  public: { 1: 0, 2: 0.4, 3: 4, 4: 8, 5: 12, 6: 20 },
-  private: { 1: 0, 2: 1, 3: 5, 4: 9, 5: 13, 6: 21 },
+  nonprofit: { 1: 0, 2: 1, 3: 4, 4: 8, 5: 12, 6: 16, 7: 20 },
+  public: { 1: 0, 2: 0.4, 3: 4, 4: 8, 5: 12, 6: 16, 7: 20 },
+  private: { 1: 0, 2: 1, 3: 5, 4: 9, 5: 13, 6: 17, 7: 21 },
 }
 
 function computeResults(answers: QuizAnswers) {
   const industry = answers.industry ?? 'nonprofit'
-  const launchKey = Math.min(Math.max(answers.launchTimeMonths, 1), 6) as 1 | 2 | 3 | 4 | 5 | 6
+  const launchKey = Math.min(Math.max(answers.launchTimeMonths, 1), 7) as 1 | 2 | 3 | 4 | 5 | 6 | 7
   const weeksMap = LAUNCH_WEEKS[industry] ?? LAUNCH_WEEKS.nonprofit
   const launchWeeksFaster = weeksMap[launchKey] ?? 0
   const displayWeeks = launchWeeksFaster
@@ -340,7 +340,7 @@ export default function Quiz({
           <label htmlFor="quiz-launch">
             {answers.launchTimeMonths === 1
               ? 'Less than 1 month'
-              : answers.launchTimeMonths >= 6
+              : answers.launchTimeMonths >= 7
                 ? '6 months or more'
                 : answers.launchTimeMonths === 2
                   ? '1 month'
@@ -349,14 +349,14 @@ export default function Quiz({
           <div
             className="quiz-slider-wrap"
             style={{
-              '--slider-fill': `${((answers.launchTimeMonths - 1) / 5) * 100}%`,
+              '--slider-fill': `${((answers.launchTimeMonths - 1) / 6) * 100}%`,
             } as React.CSSProperties}
           >
             <input
               id="quiz-launch"
               type="range"
               min={1}
-              max={6}
+              max={7}
               value={answers.launchTimeMonths}
               onChange={(e) => updateAnswer('launchTimeMonths', Number(e.target.value))}
               className="quiz-range"
