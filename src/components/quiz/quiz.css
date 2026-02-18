@@ -230,6 +230,33 @@
   cursor: not-allowed;
 }
 
+.quiz-cta-btn--loading:disabled {
+  opacity: 1;
+  cursor: wait;
+}
+
+.quiz-cta-btn--loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.quiz-cta-btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: quiz-spinner 0.7s linear infinite;
+}
+
+@keyframes quiz-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Results section — always visible, blurred until submitted */
 .quiz-results {
   margin-top: 40px;
@@ -289,4 +316,35 @@
 
 .quiz-results-item strong {
   color: #2563eb;
+}
+
+/* Mobile — stack form and results vertically */
+@media (max-width: 640px) {
+  .quiz {
+    padding: 24px 16px 40px;
+  }
+
+  .quiz-contact-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .quiz-results-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .quiz-results-panel {
+    padding: 20px 20px;
+  }
+
+  .quiz-segmented {
+    flex-direction: column;
+  }
+
+  .quiz-segmented-option:first-child:not(.quiz-segmented-option--selected),
+  .quiz-segmented-option:last-child:not(.quiz-segmented-option--selected),
+  .quiz-segmented-option--selected {
+    border-radius: 9999px;
+  }
 }

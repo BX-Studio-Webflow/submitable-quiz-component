@@ -174,6 +174,7 @@ export default function Quiz({
 }: QuizProps) {
   const [answers, setAnswers] = useState<QuizAnswers>(defaultAnswers)
   const [showResults, setShowResults] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const updateAnswer = <K extends keyof QuizAnswers>(key: K, value: QuizAnswers[K]) => {
     setAnswers((prev) => ({ ...prev, [key]: value }))
@@ -204,7 +205,8 @@ export default function Quiz({
         className="quiz-form"
         onSubmit={async (e) => {
           e.preventDefault()
-          if (!canSeeResults) return
+          if (!canSeeResults || isSubmitting) return
+          setIsSubmitting(true)
           try {
             await submitToHubSpot(
               answers,
@@ -215,6 +217,8 @@ export default function Quiz({
             setShowResults(true)
           } catch (err) {
             console.error('HubSpot submission failed:', err)
+          } finally {
+            setIsSubmitting(false)
           }
         }}
       >
@@ -422,10 +426,17 @@ export default function Quiz({
 
         <button
           type="submit"
-          className="quiz-cta-btn"
-          disabled={!canSeeResults}
+          className={`quiz-cta-btn ${isSubmitting ? 'quiz-cta-btn--loading' : ''}`}
+          disabled={!canSeeResults || isSubmitting}
         >
-          Calculate My ROI
+          {isSubmitting ? (
+            <>
+              <span className="quiz-cta-btn-spinner" aria-hidden />
+              Calculating…
+            </>
+          ) : (
+            'Calculate My ROI'
+          )}
         </button>
       </form>
 
